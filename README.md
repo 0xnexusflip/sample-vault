@@ -42,7 +42,7 @@ To run a specific test:
 forge test --match-contract VaultTest --match-test NAME_OF_TEST
 ```
 
-(To check calldata stack for a given test add the ``` -vvvv ``` modifier after your test command.)
+(To check test function calldata stack add the ``` -vvvv ``` modifier after your test command.)
 
 To check testing coverage:
 ```bash
