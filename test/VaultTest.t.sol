@@ -79,8 +79,10 @@ contract VaultTest is Test {
         //Whitelist ERC20 newToken
         vault.whitelistToken(address(newToken));
 
-        //Mint newToken for Alice and Bob
+        //Mint token for Alice
         token.mint(alice, 500 ether);
+
+        //Mint newToken for Bob
         newToken.mint(bob, 500 ether);
 
         //Approve newToken for Alice and Bob
