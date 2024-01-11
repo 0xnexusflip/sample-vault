@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title ERC20 Vault
-/// @author nexusflip
+/// @title ERC20 Sample Vault
 /// @notice A simple pausable Vault integration with an ERC20 token whitelist and access control
+/// @dev Inherits OpenZeppelins' Ownable contract
 contract Vault is Ownable {
     /// @notice ERC20 addresses for which token is whitelisted (true -» whitelisted, false -» !whitelisted)
     mapping(address => bool) private whitelistedTokens;

@@ -9,6 +9,7 @@ contract VaultTest is Test {
     /// PUBLIC VARIABLES
     Vault public vault;
     ERC20Mock public token;
+    Ownable public ownable;
 
     uint256 public depositAmount;
     uint256 public mintAmount;
@@ -119,18 +120,30 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for end-to-end deposit and withdraw
     function testFuzzDepositWithdraw(uint256 amount) public {
+        //Prank as Alice
+        address alice = address(0x2);
+        vm.startPrank(alice);
+
+        //Mint token for Alice
+        token.mint(alice, amount);
+
+        //Approve Vault deposit
+        token.approve(address(vault), amount);
+
         //Deposit token
         vault.deposit(address(token), amount);
 
         //Assert deposit amount
         assertEq(token.balanceOf(address(vault)), amount);
-        assertEq(vault.deposits(address(this), address(token)), amount);
+        assertEq(vault.deposits(alice, address(token)), amount);
 
         //Withdraw token
         vault.withdraw(address(token), amount);
 
         //Assert withdrawn amount
-        assertEq(token.balanceOf(address(this)), mintAmount);
+        assertEq(token.balanceOf(alice), amount);
+
+        vm.stopPrank();
     }
 
     ///@notice Fuzz test for checking revert when withdraw amount gt user deposit
@@ -143,33 +156,6 @@ contract VaultTest is Test {
     }
 
     /// REVERT TESTING
-
-    ///@notice Revert test for pausing contract without access control
-    function testFailAccessPause() public {
-        //Set address to non-authorized
-        vm.prank(address(0x123));
-
-        //Expect access control revert when attempting pause
-        vault.pause();
-    }
-
-    ///@notice Revert test for unpausing contract without access control
-    function testFailAccessUnpause() public {
-        //Set address to non-authorized
-        vm.prank(address(0x123));
-
-        //Expect access control revert when attempting unpause
-        vault.unpause();
-    }
-
-    ///@notice Revert test for whitelisting ERC20 token address without access control
-    function testFailAccessWhitelist() public {
-        //Set address to non-authorized
-        vm.prank(address(0x123));
-
-        //Expect access control revert when attempting token whitelisting
-        vault.whitelistToken(address(0x456));
-    }
 
     /// @notice Revert test for depositing when Vault is paused
     function testDepositPaused() public {
@@ -208,5 +194,32 @@ contract VaultTest is Test {
         vm.expectRevert("Token not whitelisted");
         vault.deposit(address(nonWhitelistedToken), depositAmount);
 
+    }
+
+    ///@notice Revert test for pausing contract without access control
+    function testFailAccessPause() public {
+        //Set address to non-authorized
+        vm.prank(address(0x123));
+
+        //Expect access control revert when attempting pause
+        vault.pause();
+    }
+
+    ///@notice Revert test for unpausing contract without access control
+    function testFailAccessUnpause() public {
+        //Set address to non-authorized
+        vm.prank(address(0x123));
+
+        //Expect access control revert when attempting unpause
+        vault.unpause();
+    }
+
+    ///@notice Revert test for whitelisting ERC20 token address without access control
+    function testFailAccessWhitelist() public {
+        //Set address to non-authorized
+        vm.prank(address(0x123));
+
+        //Expect access control revert when attempting token whitelisting
+        vault.whitelistToken(address(0x456));
     }
 }
