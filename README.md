@@ -14,7 +14,7 @@ The Vault contract is a Solidity smart contract designed to enable users to depo
 ## Requirements
 
 - The testing suite was drafted using Foundry. To run it, the Foundry framework should be installed. Refer to the Foundry Book at:
-[Foundry](https://getfoundry.sh/)
+(https://getfoundry.sh/)
 
 ## Setup
 
