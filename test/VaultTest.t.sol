@@ -28,6 +28,7 @@ contract VaultTest is Test {
 
         // Approve tokens for Vault usage
         token.approve(address(vault), type(uint256).max);
+        vault.whitelistToken(address(token));
         
         // Mock amount for testing
         depositAmount = 100 ether;
@@ -37,9 +38,6 @@ contract VaultTest is Test {
 
     /// @notice End-to-end test for user deposit and withdraw
     function testDepositWithdraw() public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-
         //Deposit token
         vault.deposit(address(token), depositAmount);
 
@@ -56,9 +54,6 @@ contract VaultTest is Test {
 
     /// @notice End-to-end test for pausing and unpausing contract
     function testPauseAndUnpause() public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-        
         //Pause contract
         vault.pause();
 
@@ -80,8 +75,7 @@ contract VaultTest is Test {
         address bob = address(0x3);
         ERC20Mock newToken = new ERC20Mock();
         
-        //Whitelist ERC20 tokens
-        vault.whitelistToken(address(token));
+        //Whitelist ERC20 newToken
         vault.whitelistToken(address(newToken));
 
         //Mint newToken for Alice and Bob
@@ -125,9 +119,6 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for end-to-end deposit and withdraw
     function testFuzzDepositWithdraw(uint256 amount) public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-
         //Deposit token
         vault.deposit(address(token), amount);
 
@@ -144,9 +135,6 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for checking revert when withdraw amount gt user deposit
     function testFuzzWithdrawGtDeposit(uint256 amount) public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-
         //Expect revert
         if (amount > 100 ether) {
             vm.expectRevert("Insufficient balance");
@@ -185,9 +173,6 @@ contract VaultTest is Test {
 
     /// @notice Revert test for depositing when Vault is paused
     function testDepositPaused() public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-
         //Pause contract
         vault.pause();
         
@@ -199,9 +184,6 @@ contract VaultTest is Test {
 
     /// @notice Revert test for withdrawing when Vault is paused
     function testWithdrawPaused() public {
-        //Whitelist ERC20 token
-        vault.whitelistToken(address(token));
-
         //Deposit amount
         vault.deposit(address(token), 50 ether);
 
