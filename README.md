@@ -1,4 +1,4 @@
-# Sample ERC20 Vault
+# ERC20 Sample Vault
 
 ## Overview
 
