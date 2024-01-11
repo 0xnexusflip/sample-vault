@@ -68,9 +68,8 @@ contract VaultTest is Test {
         vault.pause();
 
         //Expect revert
-        try vault.deposit(address(token), depositAmount) {
-            fail("Deposit should fail when paused");
-        } catch {}
+        vm.expectRevert("Vault is paused");
+        vault.deposit(address(token), depositAmount);
 
         //Unpause contract
         vault.unpause();
@@ -80,7 +79,7 @@ contract VaultTest is Test {
     }
 
     /// @notice End-to-end test for multiple user deposit and withdraws
-    function testMultipleUsersDepositWithdraw() public {
+    function testMultiplDepositWithdraws() public {
         //Setup additional user accounts and ERC20 mock token
         address user2 = address(0x2);
         vm.deal(user2, 1 ether);
@@ -120,18 +119,14 @@ contract VaultTest is Test {
     /// FUZZING
 
     ///@notice Fuzz test for checking revert when withdraw amount gt user deposit
-    function testFuzzWithdrawMoreThanDeposit(uint256 amount) public {
+    function testFuzzWithdrawGtDeposit(uint256 amount) public {
         //Whitelist ERC20 token
         vault.whitelistToken(address(token));
-        
-        //Deposit token
-        vault.deposit(address(token), amount);
 
         //Expect revert
         if (amount > 100 ether) {
-            try vault.withdraw(address(token), amount) {
-                fail("Should not be able to withdraw more than deposited");
-            } catch {}
+            vm.expectRevert("Insufficient balance");
+            vault.withdraw(address(token), amount);
         }
     }
 
@@ -196,22 +191,21 @@ contract VaultTest is Test {
     }
 
     /// @notice Revert test for depositing when Vault is paused
-    function testFailDepositWhenPaused() public {
+    function testDepositPaused() public {
         //Whitelist ERC20 token
         vault.whitelistToken(address(token));
 
         //Pause contract
         vault.pause();
         
-        //Attempt deposit
-        vault.deposit(address(token), 50 ether);
-
         //Expect pause revert
         vm.expectRevert("Vault is paused");
+        vault.deposit(address(token), 50 ether);
+
     }
 
     /// @notice Revert test for withdrawing when Vault is paused
-    function testFailWithdrawWhenPaused() public {
+    function testWithdrawPaused() public {
         //Whitelist ERC20 token
         vault.whitelistToken(address(token));
 
@@ -221,25 +215,23 @@ contract VaultTest is Test {
         //Pause contract
         vault.pause();
         
-        //Attempt withdraw
-        vault.withdraw(address(token), 50 ether);
-
         //Expect pause revert
         vm.expectRevert("Vault is paused");
+        vault.withdraw(address(token), 50 ether);
+
     }
 
     /// @notice Revert test for checking deposit with non-whitelisted token
-    function testFailDepositWithNonWhitelistedToken() public {
+    function testDepositNonWhitelisted() public {
         //Init non-whitelisted ERC20 token
         ERC20Mock nonWhitelistedToken = new ERC20Mock();
 
         //Mint token
         nonWhitelistedToken.mint(address(this), depositAmount);
 
-        //Deposit non-whitelisted token amount
+        //Expect whitelist revert
+        vm.expectRevert("Token not whitelisted");
         vault.deposit(address(nonWhitelistedToken), depositAmount);
 
-        //Expect revert
-        vm.expectRevert();
     }
 }
