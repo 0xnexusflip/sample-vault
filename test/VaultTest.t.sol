@@ -13,11 +13,6 @@ contract VaultTest is Test {
     uint256 public depositAmount;
     uint256 public mintAmount;
 
-    // EVENTS
-
-    event Deposit(address indexed user, address indexed token, uint256 amount);
-    event Withdraw(address indexed user, address indexed token, uint256 amount);
-
     /// TESTING SUITE SET-UP
 
     function setUp() public {
@@ -79,44 +74,73 @@ contract VaultTest is Test {
     }
 
     /// @notice End-to-end test for multiple user deposit and withdraws
-    function testMultiplDepositWithdraws() public {
+    function testMultipleDepositWithdraws() public {
         //Setup additional user accounts and ERC20 mock token
-        address user2 = address(0x2);
-        vm.deal(user2, 1 ether);
-        ERC20Mock token2 = new ERC20Mock();
+        address alice = address(0x2);
+        address bob = address(0x3);
+        ERC20Mock newToken = new ERC20Mock();
         
         //Whitelist ERC20 tokens
         vault.whitelistToken(address(token));
-        vault.whitelistToken(address(token2));
+        vault.whitelistToken(address(newToken));
 
-        token2.mint(user2, 500 ether);
-        vm.prank(user2);
-        token2.approve(address(vault), type(uint256).max);
+        //Mint newToken for Alice and Bob
+        token.mint(alice, 500 ether);
+        newToken.mint(bob, 500 ether);
+
+        //Approve newToken for Alice and Bob
+        vm.prank(alice);
+        token.approve(address(vault), type(uint256).max);
+
+        vm.prank(bob);
+        newToken.approve(address(vault), type(uint256).max);
 
         //Alice deposit
+        vm.prank(alice);
         uint256 aliceDeposit = 100 ether;
         vault.deposit(address(token), aliceDeposit);
 
         //Bob deposit
-        vm.prank(user2);
+        vm.prank(bob);
         uint256 bobDeposit = 200 ether;
-        vault.deposit(address(token2), bobDeposit);
+        vault.deposit(address(newToken), bobDeposit);
 
         //Assert balances for Alice and Bob
-        assertEq(vault.deposits(address(this), address(token)), aliceDeposit);
-        assertEq(vault.deposits(user2, address(token2)), bobDeposit);
+        assertEq(vault.deposits(alice, address(token)), aliceDeposit);
+        assertEq(vault.deposits(bob, address(newToken)), bobDeposit);
 
         //Alice and Bob withdraw
+        vm.prank(alice);
         vault.withdraw(address(token), aliceDeposit);
-        vm.prank(user2);
-        vault.withdraw(address(token2), bobDeposit);
+
+        vm.prank(bob);
+        vault.withdraw(address(newToken), bobDeposit);
 
         //Assert balances for Alice and Bob
-        assertEq(token.balanceOf(address(this)), 1000 ether);
-        assertEq(token2.balanceOf(user2), 500 ether);
+        assertEq(token.balanceOf(alice), 500 ether);
+        assertEq(newToken.balanceOf(bob), 500 ether);
     }
 
     /// FUZZING
+
+    ///@notice Fuzz test for end-to-end deposit and withdraw
+    function testFuzzDepositWithdraw(uint256 amount) public {
+        //Whitelist ERC20 token
+        vault.whitelistToken(address(token));
+
+        //Deposit token
+        vault.deposit(address(token), amount);
+
+        //Assert deposit amount
+        assertEq(token.balanceOf(address(vault)), amount);
+        assertEq(vault.deposits(address(this), address(token)), amount);
+
+        //Withdraw token
+        vault.withdraw(address(token), amount);
+
+        //Assert withdrawn amount
+        assertEq(token.balanceOf(address(this)), mintAmount);
+    }
 
     ///@notice Fuzz test for checking revert when withdraw amount gt user deposit
     function testFuzzWithdrawGtDeposit(uint256 amount) public {
@@ -130,41 +154,10 @@ contract VaultTest is Test {
         }
     }
 
-    /// EVENT TESTING
-
-    /// @notice Unit test for checking deposit event
-    function testDepositEmit() public {
-        //Whitelist ERC20
-        vault.whitelistToken(address(token));
-
-        //Expect event
-        vm.expectEmit(true, true, false, true);
-        emit Deposit(address(this), address(token), depositAmount);
-
-        //Withdraw amount
-        vault.deposit(address(token), depositAmount);
-    }
-
-    /// @notice Unit test for checking withdraw event
-    function testWithdrawEmit() public {
-        //Whitelist ERC20
-        vault.whitelistToken(address(token));
-
-        //Deposit amount
-        vault.deposit(address(token), depositAmount);
-
-        //Expect event
-        vm.expectEmit(true, true, false, true);
-        emit Withdraw(address(this), address(token), depositAmount);
-
-        //Withdraw amount
-        vault.withdraw(address(token), depositAmount);
-    }
-
     /// REVERT TESTING
 
     ///@notice Revert test for pausing contract without access control
-    function testFailUnauthorizedPause() public {
+    function testFailAccessPause() public {
         //Set address to non-authorized
         vm.prank(address(0x123));
 
@@ -173,7 +166,7 @@ contract VaultTest is Test {
     }
 
     ///@notice Revert test for unpausing contract without access control
-    function testFailUnauthorizedUnpause() public {
+    function testFailAccessUnpause() public {
         //Set address to non-authorized
         vm.prank(address(0x123));
 
@@ -182,7 +175,7 @@ contract VaultTest is Test {
     }
 
     ///@notice Revert test for whitelisting ERC20 token address without access control
-    function testFailUnauthorizedWhitelistToken() public {
+    function testFailAccessWhitelist() public {
         //Set address to non-authorized
         vm.prank(address(0x123));
 
