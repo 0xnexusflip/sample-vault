@@ -15,7 +15,7 @@ contract Vault is Ownable {
     mapping(address => mapping(address => uint256)) public deposits;
 
     /// @notice Flag to pause contract if owner
-    bool public paused; 
+    bool public paused;
 
     /// @notice Emitted when deposit is executed
     /// @param user Address of depositor
@@ -41,6 +41,11 @@ contract Vault is Ownable {
     /// @dev If not whitelisted, reverts
     modifier onlyWhitelisted(address _token) {
         require(whitelistedTokens[_token], "Token not whitelisted");
+        _;
+    }
+
+    modifier notZeroAddress(address _address) {
+        require(_address != address(0), "Zero address");
         _;
     }
 
@@ -75,8 +80,16 @@ contract Vault is Ownable {
     /// @dev Emits Deposit event
     /// @dev Requires contract to be unpaused and ERC20 token address to be whitelisted
     /// @dev If user balance lt amount of token to deposit, reverts
-    function deposit(address _token, uint256 _amount) public whenNotPaused onlyWhitelisted(_token) {
-        require(IERC20(_token).transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+    function deposit(
+        address _token,
+        uint256 _amount
+    ) public whenNotPaused onlyWhitelisted(_token) notZeroAddress(msg.sender) {
+        require(_amount > 0, "Cannot deposit 0");
+        require(
+            IERC20(_token).transferFrom(msg.sender, address(this), _amount),
+            "Transfer failed"
+        );
+
         deposits[msg.sender][_token] += _amount;
 
         emit Deposit(msg.sender, _token, _amount);
@@ -88,11 +101,22 @@ contract Vault is Ownable {
     /// @dev Emits Withdraw event
     /// @dev Requires contract to be unpaused and ERC20 token address to be whitelisted
     /// @dev If amount of token deposited lt amount of token withdraw, reverts
-    function withdraw(address _token, uint256 _amount) public whenNotPaused onlyWhitelisted(_token) {
-        require(deposits[msg.sender][_token] >= _amount, "Insufficient balance");
+    function withdraw(
+        address _token,
+        uint256 _amount
+    ) public whenNotPaused onlyWhitelisted(_token) notZeroAddress(msg.sender) {
+        require(_amount > 0, "Cannot withdraw 0");
+
+        require(
+            deposits[msg.sender][_token] >= _amount,
+            "Insufficient balance"
+        );
         deposits[msg.sender][_token] -= _amount;
 
-        require(IERC20(_token).transfer(msg.sender, _amount), "Transfer failed");
+        require(
+            IERC20(_token).transfer(msg.sender, _amount),
+            "Transfer failed"
+        );
 
         emit Withdraw(msg.sender, _token, _amount);
     }

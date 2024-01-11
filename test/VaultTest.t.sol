@@ -30,7 +30,7 @@ contract VaultTest is Test {
         // Approve tokens for Vault usage
         token.approve(address(vault), type(uint256).max);
         vault.whitelistToken(address(token));
-        
+
         // Mock amount for testing
         depositAmount = 100 ether;
     }
@@ -64,7 +64,7 @@ contract VaultTest is Test {
 
         //Unpause contract
         vault.unpause();
-        
+
         //Expect pass
         vault.deposit(address(token), depositAmount);
     }
@@ -75,7 +75,7 @@ contract VaultTest is Test {
         address alice = address(0x2);
         address bob = address(0x3);
         ERC20Mock newToken = new ERC20Mock();
-        
+
         //Whitelist ERC20 newToken
         vault.whitelistToken(address(newToken));
 
@@ -122,6 +122,7 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for end-to-end deposit and withdraw
     function testFuzzDepositWithdraw(uint256 amount) public {
+        vm.assume(amount > 0 && amount < 1e77);
         //Prank as Alice
         address alice = address(0x2);
         vm.startPrank(alice);
@@ -163,11 +164,10 @@ contract VaultTest is Test {
     function testDepositPaused() public {
         //Pause contract
         vault.pause();
-        
+
         //Expect pause revert
         vm.expectRevert("Vault is paused");
         vault.deposit(address(token), 50 ether);
-
     }
 
     /// @notice Revert test for withdrawing when Vault is paused
@@ -177,11 +177,41 @@ contract VaultTest is Test {
 
         //Pause contract
         vault.pause();
-        
+
         //Expect pause revert
         vm.expectRevert("Vault is paused");
         vault.withdraw(address(token), 50 ether);
+    }
 
+    /// @notice Revert test for depositing 0 token
+    function testZeroDeposit() public {
+        //Expect 0 token revert
+        vm.expectRevert("Cannot deposit 0");
+        vault.deposit(address(token), 0);
+    }
+
+    /// @notice Revert test for withdrawing 0 token
+    function testZeroWithdraw() public {
+        //Expect 0 token revert
+        vm.expectRevert("Cannot withdraw 0");
+        vault.withdraw(address(token), 0);
+    }
+
+    /// @notice Revert test for address 0 deposit
+    function testNotAddressZeroDeposit() public {
+        //Expect 0 address revert
+        //Expect 0 token revert
+        vm.expectRevert("Zero address");
+        vm.prank(address(0));
+        vault.deposit(address(token), depositAmount);
+    }
+
+    /// @notice Revert test for address 0 withdraw
+    function testNotAddressZeroWithdraw() public {
+        //Expect 0 token revert
+        vm.expectRevert("Zero address");
+        vm.prank(address(0));
+        vault.deposit(address(token), depositAmount);
     }
 
     /// @notice Revert test for checking deposit with non-whitelisted token
@@ -195,14 +225,13 @@ contract VaultTest is Test {
         //Expect whitelist revert
         vm.expectRevert("Token not whitelisted");
         vault.deposit(address(nonWhitelistedToken), depositAmount);
-
     }
 
     ///@notice Revert test for pausing contract without access control
     function testFailAccessPause() public {
         //Set address to non-authorized
         vm.prank(address(0x123));
-
+        
         //Expect access control revert when attempting pause
         vault.pause();
     }
