@@ -51,8 +51,8 @@ forge coverage
 
 ### Expected user flow
 
-- User calls ```approve(AMOUNT_TO_APPROVE)``` on a whitelisted ERC20 token and approves the amount to deposit to the Vault
-- User calls ```deposit(WHITELISTED_TOKEN_ADDRESS, APPROVED_AMOUNT``` to deposit up to the previously approved amount of whitelisted token
+- User calls ```approve(VAULT_CONTRACT_ADDRESS, AMOUNT_TO_APPROVE)``` on a whitelisted ERC20 token contract address and approves the amount to deposit to the Vault
+- User calls ```deposit(WHITELISTED_TOKEN_ADDRESS, APPROVED_AMOUNT)``` to deposit up to the previously approved amount of whitelisted token
 - User calls ```withdraw(WHITELISTED_TOKEN_ADDRESS, AMOUNT_TO_WITHDRAW)``` to withdraw the requested amount of previously deposited token
 
 ### Expected owner flow

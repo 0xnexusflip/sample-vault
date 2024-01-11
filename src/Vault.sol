@@ -44,6 +44,9 @@ contract Vault is Ownable {
         _;
     }
 
+    /// @notice Checks if function caller is not address(0)
+    /// @param _address Address of function caller
+    /// @dev If address(0), reverts
     modifier notZeroAddress(address _address) {
         require(_address != address(0), "Zero address");
         _;
@@ -70,6 +73,7 @@ contract Vault is Ownable {
 
     /// @notice Whitelists ERC20 address, enabling deposits
     /// @notice Can only be called by Admin
+    /// @param _token ERC20 token address to whitelist
     function whitelistToken(address _token) public onlyOwner {
         whitelistedTokens[_token] = true;
     }
@@ -80,6 +84,8 @@ contract Vault is Ownable {
     /// @dev Emits Deposit event
     /// @dev Requires contract to be unpaused and ERC20 token address to be whitelisted
     /// @dev If user balance lt amount of token to deposit, reverts
+    /// @dev If amount to deposit == 0, reverts
+    /// @dev If msg.sender == address(0), reverts
     function deposit(
         address _token,
         uint256 _amount
@@ -101,6 +107,8 @@ contract Vault is Ownable {
     /// @dev Emits Withdraw event
     /// @dev Requires contract to be unpaused and ERC20 token address to be whitelisted
     /// @dev If amount of token deposited lt amount of token withdraw, reverts
+    /// @dev If amount to withdraw == 0, reverts
+    /// @dev If msg.sender == address(0), reverts
     function withdraw(
         address _token,
         uint256 _amount

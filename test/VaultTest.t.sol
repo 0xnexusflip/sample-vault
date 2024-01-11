@@ -185,33 +185,32 @@ contract VaultTest is Test {
 
     /// @notice Revert test for depositing 0 token
     function testZeroDeposit() public {
-        //Expect 0 token revert
+        //Expect 0 token amount revert
         vm.expectRevert("Cannot deposit 0");
         vault.deposit(address(token), 0);
     }
 
     /// @notice Revert test for withdrawing 0 token
     function testZeroWithdraw() public {
-        //Expect 0 token revert
+        //Expect 0 token amount revert
         vm.expectRevert("Cannot withdraw 0");
         vault.withdraw(address(token), 0);
     }
 
-    /// @notice Revert test for address 0 deposit
+    /// @notice Revert test for deposit from address(0)
     function testNotAddressZeroDeposit() public {
-        //Expect 0 address revert
-        //Expect 0 token revert
+        //Expect address(0) revert
         vm.expectRevert("Zero address");
         vm.prank(address(0));
         vault.deposit(address(token), depositAmount);
     }
 
-    /// @notice Revert test for address 0 withdraw
+    /// @notice Revert test for withdraw from address(0)
     function testNotAddressZeroWithdraw() public {
-        //Expect 0 token revert
+        //Expect address(0) revert
         vm.expectRevert("Zero address");
         vm.prank(address(0));
-        vault.deposit(address(token), depositAmount);
+        vault.withdraw(address(token), depositAmount);
     }
 
     /// @notice Revert test for checking deposit with non-whitelisted token
