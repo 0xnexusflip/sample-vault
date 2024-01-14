@@ -122,6 +122,8 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for end-to-end deposit and withdraw
     function testFuzzDepositWithdraw(uint256 amount) public {
+        //There is a rounding error ~1e77
+        //It's expected not to run into such a big amount of token
         vm.assume(amount > 0 && amount < 1e77);
         //Prank as Alice
         address alice = address(0x2);
@@ -151,11 +153,12 @@ contract VaultTest is Test {
 
     ///@notice Fuzz test for checking revert when withdraw amount gt user deposit
     function testFuzzWithdrawGtDeposit(uint256 amount) public {
-        //Expect revert
-        if (amount > 100 ether) {
-            vm.expectRevert("Insufficient balance");
-            vault.withdraw(address(token), amount);
-        }
+        //Optimize fuzz runs by starting fuzz range at condition to test
+        vm.assume(amount > 100 ether);
+
+        //Expect insufficient balance
+        vm.expectRevert("Insufficient balance");
+        vault.withdraw(address(token), amount);
     }
 
     /// REVERT TESTING
